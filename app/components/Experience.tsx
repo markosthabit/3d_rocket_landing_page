@@ -6,9 +6,8 @@ import { Star } from "./Star";
 import * as THREE from 'three';
 import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
-
-const LINE_NB_POINTS = 12000;
-
+import { TextSection } from "./TextSection";
+const LINE_NB_POINTS = 1000;
 
 export const Experience = () => {
     const starData = useMemo(() => {
@@ -28,20 +27,19 @@ export const Experience = () => {
         return stars;
     }, []);
 
-
-    const curve = new THREE.CatmullRomCurve3([
-        new THREE.Vector3(0, 0, 0),
-        new THREE.Vector3(0, 10, 0),
-        new THREE.Vector3(-2, 20, 0),
-        new THREE.Vector3(-3, 30, 0),
-        new THREE.Vector3(5, 40, 0),
-        new THREE.Vector3(5, 50, 0),
-        new THREE.Vector3(7, 60, 0),
-        new THREE.Vector3(5, 70, 0),
-        new THREE.Vector3(0, 80, 0),
-        new THREE.Vector3(0, 90, 0),
-        new THREE.Vector3(0, 100, 0),
-    ], false, "catmullrom", 0.5);
+    const curvePoints = [new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(6, 15, 0),
+    new THREE.Vector3(10, 30, 0),
+    new THREE.Vector3(-2, 45, 0),
+    new THREE.Vector3(-12, 60, 0),
+    new THREE.Vector3(-5, 75, 0),
+    new THREE.Vector3(8, 90, 0),
+    new THREE.Vector3(5, 105, 0),
+    new THREE.Vector3(0, 120, 0),
+    ]
+    const curve = new THREE.CatmullRomCurve3(
+        curvePoints
+        , false, "catmullrom", 0.5);
 
     const linePoints = curve.getPoints(LINE_NB_POINTS);
     const shape = new THREE.Shape();
@@ -82,10 +80,21 @@ export const Experience = () => {
             rocketGroup.current.rotation.z = angle - Math.PI / 2;
         }
     })
+    const textSections = [
+        {
+            position: new THREE.Vector3(
+                curvePoints[1].x - 1,
+                curvePoints[1].y + 4,
+                curvePoints[1].z,
 
+            ),
+            title: "Welcome to Earth",
+            subtitle: "Explore the beauty of our planet",
+        }
+    ]
     return (
         <>
-            {/* <OrbitControls enableZoom={false} /> Removed to prevent fighting with scroll camera rotation */}
+            {/* <OrbitControls /> Removed to prevent fighting with scroll camera rotation */}
             <directionalLight position={[0, 3, 1]}
                 intensity={0.1}
             />
@@ -98,45 +107,11 @@ export const Experience = () => {
                     </group>
                 </Float>
             </group>
-            <group position={[3, -2, -10]}>
-
-                <Text
-                    color="white"
-                    anchorX="left"
-                    anchorY="middle"
-                    fontSize={0.22}
-                    maxWidth={2.5}
-                >
-                    Welcome To GoStore!
-
-                </Text>
-            </group>
-            <group position={[3, 12, -10]}>
-
-                <Text
-                    color="white"
-                    anchorX="left"
-                    anchorY="middle"
-                    fontSize={0.52}
-                    maxWidth={2.5}
-                >
-                    Our Services
-
-                </Text>
-                <Text
-                    color="white"
-                    anchorX="left"
-                    anchorY="top"
-                    position-y={-0.66}
-                    fontSize={0.22}
-                    maxWidth={2.5}
-
-                >
-                    We build custom software, mobile applications, and websites that help businesses
-                    streamline their operations and engage their customers.
-
-                </Text>
-            </group>
+            {/* TEXT */}
+            {textSections.map((section, index) => (
+                <TextSection{...section} key={index} />
+            ))}
+            {/* Line */}
             <group position-y={-1}>
                 <mesh>
                     <extrudeGeometry
@@ -149,7 +124,8 @@ export const Experience = () => {
                             }
                         ]}
                     />
-                    <meshStandardMaterial color={"white"} opacity={1} transparent />
+                    <meshStandardMaterial color={"white"} opacity={1} transparent envMapIntensity={2} />
+
                 </mesh>
             </group>
             {starData.map((star, index) => (

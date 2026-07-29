@@ -12,7 +12,7 @@ export function Star({ opacity, ...props }: { opacity: number } & ThreeElements[
   return (
     <group {...props} dispose={null}>
       <mesh geometry={nodes.Circle001_Circle007.geometry} material={materials.FF9800}>
-        <meshStandardMaterial {...materials['lambert2SG.001']} opacity={opacity} transparent />
+        <meshStandardMaterial {...materials['lambert2SG.001']} opacity={opacity} transparent envMapIntensity={2} />
       </mesh>
     </group>
   )

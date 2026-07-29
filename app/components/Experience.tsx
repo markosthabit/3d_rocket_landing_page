@@ -1,5 +1,6 @@
 "use client";
 import { Float, Line, OrbitControls, PerspectiveCamera, useScroll, Text } from "@react-three/drei";
+import gsap from 'gsap';
 import { Background } from "./Background";
 import { Rocketship } from "./Rocketship";
 import { Star } from "./Star";
@@ -51,50 +52,51 @@ export const Experience = () => {
     const scroll = useScroll();
 
     useEffect(() => {
-        if (scroll.el) {
-            scroll.el.style.scrollSnapType = "y mandatory";
-            const snapPoints: HTMLElement[] = [];
-            
-            // The first child is the div created by ScrollControls that determines the scrollHeight
-            const innerDiv = scroll.el.firstElementChild as HTMLElement;
-            if (innerDiv) {
-                // Ensure it acts as the containing block for absolute children
-                if (getComputedStyle(innerDiv).position === 'static') {
-                    innerDiv.style.position = 'relative';
-                }
-                
-                // Dynamically create snap points using exact percentages of the scroll content
-                for (let i = 0; i < scroll.pages; i++) {
-                    const snapPoint = document.createElement('div');
-                    snapPoint.style.position = 'absolute';
-                    snapPoint.style.left = '0';
-                    snapPoint.style.width = '100%';
-                    snapPoint.style.height = '10px'; // Small marker, avoids boundary bugs
-                    
-                    // (i / scroll.pages) exactly maps to the page boundaries
-                    // e.g. for 9 pages, i=8 is 88.88% which is exactly the top of the 800vh mark.
-                    snapPoint.style.top = `${(i / scroll.pages) * 100}%`;
-                    snapPoint.style.scrollSnapAlign = 'start';
-                    snapPoint.style.pointerEvents = 'none';
-                    
-                    innerDiv.appendChild(snapPoint);
-                    snapPoints.push(snapPoint);
-                }
-            }
-            
-            return () => {
-                snapPoints.forEach(p => p.remove());
-            }
+        if (!scroll.el) return;
+
+        let scrollTimeout: ReturnType<typeof setTimeout>;
+
+        const handleScroll = () => {
+            clearTimeout(scrollTimeout);
+
+            scrollTimeout = setTimeout(() => {
+                // User stopped scrolling. Snap to the nearest page using GSAP!
+                const clientHeight = scroll.el.clientHeight;
+                const scrollHeight = scroll.el.scrollHeight;
+                const maxScroll = scrollHeight - clientHeight;
+
+                // Calculate which page we are closest to (0 to pages - 1)
+                const currentPage = Math.round(scroll.el.scrollTop / clientHeight);
+                const targetScroll = Math.min(currentPage * clientHeight, maxScroll);
+
+                // Animate smoothly to the target
+                gsap.to(scroll.el, {
+                    scrollTop: targetScroll,
+                    duration: 0.5,
+                    ease: "power2.out",
+                    overwrite: "auto"
+                });
+            }, 150); // wait 150ms after the last scroll event to trigger snap
+        };
+
+        scroll.el.addEventListener('scroll', handleScroll, { passive: true });
+
+        return () => {
+            clearTimeout(scrollTimeout);
+            scroll.el.removeEventListener('scroll', handleScroll);
         }
-    }, [scroll.el, scroll.pages]);
+    }, [scroll.el]);
 
     useFrame((_state, delta) => {
+
         // Clamp the offset to prevent out-of-bounds errors during overscroll (rubber-banding on Mac/iOS)
         const safeOffset = Math.max(0, Math.min(1, scroll.offset));
-        
+
         // Get the exact point and tangent on the curve based on the smooth scroll offset
-        const curPoint = curve.getPointAt(safeOffset);
-        const tangent = curve.getTangentAt(safeOffset);
+        // We use getPoint instead of getPointAt so that parametric t (e.g. 1/8) 
+        // maps exactly to curvePoints[i], ensuring perfect alignment with the snap points.
+        const curPoint = curve.getPoint(safeOffset);
+        const tangent = curve.getTangent(safeOffset);
 
         // We use copy instead of lerp here because scroll.offset is already smoothed 
         // by the damping prop in ScrollControls, and double-smoothing causes jitter.
@@ -123,7 +125,7 @@ export const Experience = () => {
         {
             position: new THREE.Vector3(
                 curvePoints[1].x - 2.5,
-                curvePoints[1].y,
+                curvePoints[1].y - 1,
                 curvePoints[1].z,
             ),
             title: "Next-Gen Hardware",
@@ -132,7 +134,7 @@ export const Experience = () => {
         {
             position: new THREE.Vector3(
                 curvePoints[2].x - 2.1,
-                curvePoints[2].y - 1,
+                curvePoints[2].y - 3,
                 curvePoints[2].z,
             ),
             title: "Premium Peripherals",
@@ -140,8 +142,8 @@ export const Experience = () => {
         },
         {
             position: new THREE.Vector3(
-                curvePoints[3].x + 3.5,
-                curvePoints[3].y - 3.5,
+                curvePoints[3].x + 4.5,
+                curvePoints[3].y - 4.5,
                 curvePoints[3].z,
             ),
             title: "Custom Builds",
@@ -168,8 +170,8 @@ export const Experience = () => {
         },
         {
             position: new THREE.Vector3(
-                curvePoints[6].x - 11.5,
-                curvePoints[6].y - 10.5,
+                curvePoints[6].x - 10.5,
+                curvePoints[6].y - 9.5,
                 curvePoints[6].z,
             ),
             title: "Top Tier Brands",
@@ -177,8 +179,8 @@ export const Experience = () => {
         },
         {
             position: new THREE.Vector3(
-                curvePoints[7].x + 1,
-                curvePoints[7].y - 14,
+                curvePoints[7].x + 1.4,
+                curvePoints[7].y - 12,
                 curvePoints[7].z,
             ),
             title: "Join the Elite",

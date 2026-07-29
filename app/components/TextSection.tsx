@@ -9,8 +9,8 @@ export const TextSection = ({ title, subtitle, ...props }: { title: string, subt
                     color="white"
                     anchorX="left"
                     anchorY="middle"
-                    fontSize={0.42}
-                    maxWidth={2.5}
+                    fontSize={0.22}
+                    maxWidth={2}
                 >
                     {title}
 
@@ -21,9 +21,9 @@ export const TextSection = ({ title, subtitle, ...props }: { title: string, subt
                     color="white"
                     anchorX="left"
                     anchorY="top"
-                    position-y={-0.66}
-                    fontSize={0.22}
-                    maxWidth={2.5}
+                    position-y={-0.26}
+                    fontSize={0.12}
+                    maxWidth={2}
 
                 >
                     {subtitle}

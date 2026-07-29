@@ -89,9 +89,12 @@ export const Experience = () => {
     }, [scroll.el, scroll.pages]);
 
     useFrame((_state, delta) => {
+        // Clamp the offset to prevent out-of-bounds errors during overscroll (rubber-banding on Mac/iOS)
+        const safeOffset = Math.max(0, Math.min(1, scroll.offset));
+        
         // Get the exact point and tangent on the curve based on the smooth scroll offset
-        const curPoint = curve.getPointAt(scroll.offset);
-        const tangent = curve.getTangentAt(scroll.offset);
+        const curPoint = curve.getPointAt(safeOffset);
+        const tangent = curve.getTangentAt(safeOffset);
 
         // We use copy instead of lerp here because scroll.offset is already smoothed 
         // by the damping prop in ScrollControls, and double-smoothing causes jitter.

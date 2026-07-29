@@ -10,7 +10,7 @@ export default function Home() {
 
       }}>
         <color attach="background" args={["#ececec"]} />
-        <ScrollControls pages={5} damping={1}>
+        <ScrollControls pages={9} damping={1}>
           <Experience />
         </ScrollControls>
 

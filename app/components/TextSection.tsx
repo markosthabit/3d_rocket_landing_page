@@ -9,7 +9,7 @@ export const TextSection = ({ title, subtitle, ...props }: { title: string, subt
                     color="white"
                     anchorX="left"
                     anchorY="middle"
-                    fontSize={0.52}
+                    fontSize={0.42}
                     maxWidth={2.5}
                 >
                     {title}

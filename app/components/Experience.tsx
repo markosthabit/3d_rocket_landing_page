@@ -4,7 +4,7 @@ import { Background } from "./Background";
 import { Rocketship } from "./Rocketship";
 import { Star } from "./Star";
 import * as THREE from 'three';
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import { TextSection } from "./TextSection";
 const LINE_NB_POINTS = 1000;
@@ -49,26 +49,53 @@ export const Experience = () => {
     const cameraGroup = useRef<THREE.Group>(null);
     const rocketGroup = useRef<THREE.Group>(null);
     const scroll = useScroll();
-    useFrame((_state, delta) => {
-        const curPointIndex = Math.min(
-            Math.round(scroll.offset * linePoints.length),
-            linePoints.length - 1
-        )
-        const curPoint = linePoints[curPointIndex];
-        cameraGroup.current!.position.lerp(curPoint, delta * 24)
 
-        // Find the direction (tangent) to the next point
-        const forwardIndex = Math.min(curPointIndex + 1, linePoints.length - 1);
-        const pointForward = linePoints[forwardIndex];
-
-        let tangent: THREE.Vector3;
-        if (curPointIndex === linePoints.length - 1) {
-            // If we're at the very end, use the previous point to find the tangent
-            const pointBehind = linePoints[Math.max(0, curPointIndex - 1)];
-            tangent = curPoint.clone().sub(pointBehind).normalize();
-        } else {
-            tangent = pointForward.clone().sub(curPoint).normalize();
+    useEffect(() => {
+        if (scroll.el) {
+            scroll.el.style.scrollSnapType = "y mandatory";
+            const snapPoints: HTMLElement[] = [];
+            
+            // The first child is the div created by ScrollControls that determines the scrollHeight
+            const innerDiv = scroll.el.firstElementChild as HTMLElement;
+            if (innerDiv) {
+                // Ensure it acts as the containing block for absolute children
+                if (getComputedStyle(innerDiv).position === 'static') {
+                    innerDiv.style.position = 'relative';
+                }
+                
+                // Dynamically create snap points using exact percentages of the scroll content
+                for (let i = 0; i < scroll.pages; i++) {
+                    const snapPoint = document.createElement('div');
+                    snapPoint.style.position = 'absolute';
+                    snapPoint.style.left = '0';
+                    snapPoint.style.width = '100%';
+                    snapPoint.style.height = '10px'; // Small marker, avoids boundary bugs
+                    
+                    // (i / scroll.pages) exactly maps to the page boundaries
+                    // e.g. for 9 pages, i=8 is 88.88% which is exactly the top of the 800vh mark.
+                    snapPoint.style.top = `${(i / scroll.pages) * 100}%`;
+                    snapPoint.style.scrollSnapAlign = 'start';
+                    snapPoint.style.pointerEvents = 'none';
+                    
+                    innerDiv.appendChild(snapPoint);
+                    snapPoints.push(snapPoint);
+                }
+            }
+            
+            return () => {
+                snapPoints.forEach(p => p.remove());
+            }
         }
+    }, [scroll.el, scroll.pages]);
+
+    useFrame((_state, delta) => {
+        // Get the exact point and tangent on the curve based on the smooth scroll offset
+        const curPoint = curve.getPointAt(scroll.offset);
+        const tangent = curve.getTangentAt(scroll.offset);
+
+        // We use copy instead of lerp here because scroll.offset is already smoothed 
+        // by the damping prop in ScrollControls, and double-smoothing causes jitter.
+        cameraGroup.current!.position.copy(curPoint);
 
         // Rotate ONLY the rocket to follow the 2D path on the XY plane
         if (rocketGroup.current) {
@@ -83,13 +110,76 @@ export const Experience = () => {
     const textSections = [
         {
             position: new THREE.Vector3(
-                curvePoints[1].x - 1,
-                curvePoints[1].y + 4,
-                curvePoints[1].z,
-
+                curvePoints[0].x - 2.3,
+                curvePoints[0].y + 0.7,
+                curvePoints[0].z,
             ),
-            title: "Welcome to Earth",
-            subtitle: "Explore the beauty of our planet",
+            title: "Welcome to GoStore",
+            subtitle: "The ultimate destination for custom PCs",
+        },
+        {
+            position: new THREE.Vector3(
+                curvePoints[1].x - 2.5,
+                curvePoints[1].y,
+                curvePoints[1].z,
+            ),
+            title: "Next-Gen Hardware",
+            subtitle: "CPUs, GPUs, and Motherboards",
+        },
+        {
+            position: new THREE.Vector3(
+                curvePoints[2].x - 2.1,
+                curvePoints[2].y - 1,
+                curvePoints[2].z,
+            ),
+            title: "Premium Peripherals",
+            subtitle: "Mechanical keyboards & gaming mice",
+        },
+        {
+            position: new THREE.Vector3(
+                curvePoints[3].x + 3.5,
+                curvePoints[3].y - 3.5,
+                curvePoints[3].z,
+            ),
+            title: "Custom Builds",
+            subtitle: "We build your dream setup",
+        },
+        {
+            position: new THREE.Vector3(
+                curvePoints[4].x + 3.5,
+                curvePoints[4].y - 6.5
+                ,
+                curvePoints[4].z,
+            ),
+            title: "24/7 Tech Support",
+            subtitle: "Our experts are always ready to help",
+        },
+        {
+            position: new THREE.Vector3(
+                curvePoints[5].x - 7.7,
+                curvePoints[5].y - 8,
+                curvePoints[5].z,
+            ),
+            title: "Secure Checkout",
+            subtitle: "Fast and safe payment options",
+        },
+        {
+            position: new THREE.Vector3(
+                curvePoints[6].x - 11.5,
+                curvePoints[6].y - 10.5,
+                curvePoints[6].z,
+            ),
+            title: "Top Tier Brands",
+            subtitle: "ASUS, NVIDIA, AMD & more",
+        },
+        {
+            position: new THREE.Vector3(
+                curvePoints[7].x + 1,
+                curvePoints[7].y - 14,
+                curvePoints[7].z,
+            ),
+            title: "Join the Elite",
+            subtitle: "Upgrade your battlestation today",
         }
     ]
     return (

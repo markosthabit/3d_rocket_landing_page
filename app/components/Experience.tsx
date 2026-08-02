@@ -5,12 +5,22 @@ import { Background } from "./Background";
 import { Rocketship } from "./Rocketship";
 import { Star } from "./Star";
 import * as THREE from 'three';
-import { useRef, useMemo, useEffect } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useRef, useMemo, useEffect, useState } from "react";
+import { useFrame, useThree } from "@react-three/fiber";
 import { TextSection } from "./TextSection";
 const LINE_NB_POINTS = 1000;
 
 export const Experience = () => {
+    const { viewport } = useThree();
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     const starData = useMemo(() => {
         const stars = [];
         for (let i = 0; i < 150; i++) {
@@ -115,35 +125,35 @@ export const Experience = () => {
     const textSections = [
         {
             position: new THREE.Vector3(
-                curvePoints[0].x - 2.3,
-                curvePoints[0].y + 0.7,
-                curvePoints[0].z,
+                isMobile ? curvePoints[0].x : curvePoints[0].x - 2.3,
+                curvePoints[0].y + (isMobile ? 1.0 : 0.7),
+                curvePoints[0].z + (isMobile ? .1 : 0),
             ),
             title: "Welcome to GoStore",
             subtitle: "The ultimate destination for custom PCs",
         },
         {
             position: new THREE.Vector3(
-                curvePoints[1].x - 2.5,
-                curvePoints[1].y - 1,
-                curvePoints[1].z,
+                isMobile ? curvePoints[1].x - .7 : curvePoints[1].x - 2.5,
+                curvePoints[1].y - (isMobile ? .5 : 1),
+                curvePoints[1].z + (isMobile ? -1.3 : 0),
             ),
             title: "Next-Gen Hardware",
             subtitle: "CPUs, GPUs, and Motherboards",
         },
         {
             position: new THREE.Vector3(
-                curvePoints[2].x - 2.1,
-                curvePoints[2].y - 3,
-                curvePoints[2].z,
+                isMobile ? curvePoints[2].x + .2 : curvePoints[2].x - 2.1,
+                curvePoints[2].y - (isMobile ? 2.5 : 3),
+                curvePoints[2].z + (isMobile ? .1 : 0),
             ),
             title: "Premium Peripherals",
             subtitle: "Mechanical keyboards & gaming mice",
         },
         {
             position: new THREE.Vector3(
-                curvePoints[3].x + 4.5,
-                curvePoints[3].y - 4.5,
+                isMobile ? curvePoints[3].x + 4.4 : curvePoints[3].x + 4.5,
+                curvePoints[3].y - (isMobile ? 4.5 : 4.5),
                 curvePoints[3].z,
             ),
             title: "Custom Builds",
@@ -151,37 +161,36 @@ export const Experience = () => {
         },
         {
             position: new THREE.Vector3(
-                curvePoints[4].x + 3.5,
-                curvePoints[4].y - 6.5
-                ,
-                curvePoints[4].z,
+                isMobile ? -8.8 : curvePoints[4].x + 3.5,
+                curvePoints[4].y - (isMobile ? 5.5 : 6.5),
+                curvePoints[4].z + (isMobile ? -3 : 0),
             ),
             title: "24/7 Tech Support",
             subtitle: "Our experts are always ready to help",
         },
         {
             position: new THREE.Vector3(
-                curvePoints[5].x - 7.7,
-                curvePoints[5].y - 8,
-                curvePoints[5].z,
+                isMobile ? -10.4 : curvePoints[5].x - 7.7,
+                curvePoints[5].y - (isMobile ? 7 : 8),
+                curvePoints[5].z + (isMobile ? -3 : 0),
             ),
             title: "Secure Checkout",
             subtitle: "Fast and safe payment options",
         },
         {
             position: new THREE.Vector3(
-                curvePoints[6].x - 10.5,
+                isMobile ? -.5 : curvePoints[6].x - 10.5,
                 curvePoints[6].y - 9.5,
-                curvePoints[6].z,
+                curvePoints[6].z + (isMobile ? -3 : 0),
             ),
             title: "Top Tier Brands",
             subtitle: "ASUS, NVIDIA, AMD & more",
         },
         {
             position: new THREE.Vector3(
-                curvePoints[7].x + 1.4,
-                curvePoints[7].y - 12,
-                curvePoints[7].z,
+                isMobile ? 8.5 : curvePoints[7].x + 1.4,
+                curvePoints[7].y - (isMobile ? 11 : 12),
+                curvePoints[7].z + (isMobile ? -1 : 0),
             ),
             title: "Join the Elite",
             subtitle: "Upgrade your battlestation today",
@@ -198,13 +207,23 @@ export const Experience = () => {
                 <PerspectiveCamera position={[0, 0, 5]} fov={30} makeDefault />
                 <Float floatIntensity={1} speed={1.5} rotationIntensity={0.5}>
                     <group ref={rocketGroup}>
-                        <Rocketship scale={[0.05, 0.05, 0.05]} position-y={0.1} position-z={0.5} />
+                        <Rocketship
+                            scale={isMobile ? [0.035, 0.035, 0.035] : [0.05, 0.05, 0.05]}
+                            position-y={isMobile ? -0.4 : 0.1}
+                            position-z={0.5}
+                        />
                     </group>
                 </Float>
             </group>
             {/* TEXT */}
             {textSections.map((section, index) => (
-                <TextSection{...section} key={index} />
+                <TextSection
+                    {...section}
+                    anchorX={isMobile ? "center" : "left"}
+                    fontSize={isMobile ? Math.min(0.18, viewport.width * 0.12) : 0.22}
+                    maxWidth={isMobile ? Math.min(1.5, viewport.width * 0.9) : 2.5}
+                    key={index}
+                />
             ))}
             {/* Line */}
             <group position-y={-1}>
